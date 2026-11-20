@@ -73,7 +73,11 @@ final class Sinxron {
             JSONObject o = new JSONObject(oqi(new FileInputStream(f)));
             JSONArray a = o.optJSONArray("sozlar");
             List<String> s = new ArrayList<>();
-            for (int i = 0; a != null && i < a.length(); i++) s.add(a.getString(i));
+            // himoya: faqat to'g'ri o'zbekcha so'zlar (harf + tutuq, 2-24 belgi), ko'pi bilan 100 000 ta
+            for (int i = 0; a != null && i < a.length() && i < 100000; i++) {
+                String w = a.getString(i);
+                if (w.matches("[a-zöğşçcwʼ]{2,24}")) s.add(w);
+            }
             Lugat.ol(c).qoshimchaniQoy(s);
         } catch (Exception ignored) { }
     }

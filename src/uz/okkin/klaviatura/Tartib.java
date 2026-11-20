@@ -111,9 +111,9 @@ final class Tartib {
         for (String x : q2.split(" ")) r2.t.add(h(x, null));
         s.add(r2.chet(chet2));
         Qator r3 = new Qator(bal);
-        r3.t.add(f("⇧", SHIFT, funkEn));
+        r3.t.add(f("⇧", SHIFT, funkEn == 1f ? 1.2f : funkEn));
         for (String x : q3.split(" ")) r3.t.add(h(x, til == RU && x.equals("ь") ? "ъ" : null));
-        r3.t.add(f("⌫", OCHIR, funkEn));
+        r3.t.add(f("⌫", OCHIR, funkEn == 1f ? 1.8f : funkEn)); // ⌫ kattaroq (foydalanuvchi talabi)
         s.add(r3);
         s.add(new Qator(54,
                 f("?123", BELGI, 1.5f),

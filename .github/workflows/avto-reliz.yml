@@ -1,0 +1,91 @@
+# 4 kunlik reja: har 4 kunda serverdagi tasdiqlangan yangi so'zlar ilova lug'atiga qo'shiladi va
+# yangi versiya avtomatik yig'ilib, GitHub relizi sifatida chiqadi. Telefonlar va Telegram bot uni o'zi topadi.
+# Kompyuter yoki Claude kerak emas: hammasi GitHub serverlarida ishlaydi.
+name: Avtomatik reliz (4 kunlik reja)
+
+on:
+  schedule:
+    - cron: "0 4 */4 * *"
+  workflow_dispatch:
+    inputs:
+      majburiy:
+        description: "Yangi so'z bo'lmasa ham chiqarilsin"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reliz
+  cancel-in-progress: false
+
+jobs:
+  reliz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Android vositalari
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          [ -d "$ANDROID_HOME/build-tools/34.0.0" ] && [ -d "$ANDROID_HOME/platforms/android-34" ] || \
+            yes | "$SDKM" "build-tools;34.0.0" "platforms;android-34" > /dev/null
+
+      - name: Yangi so'zlarni olish
+        id: lugat
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -fsS --max-time 30 https://inok.uz/claude-pc/klaviatura/lugat -o qoshimcha.json \
+            || echo '{"versiya":-1,"sozlar":[]}' > qoshimcha.json
+          V=$(python3 -c "import json;print(json.load(open('qoshimcha.json'))['versiya'])")
+          OXIRGI=$(gh release view --json body -q .body 2>/dev/null | grep -o 'lugat-v[0-9]*' | tr -dc 0-9 || true)
+          ESKI_KOD=$(gh release view --json name -q .name 2>/dev/null | grep -o '([0-9]*)' | tr -dc 0-9 || true)
+          QOSHILDI=$(python3 vositalar/lugat_qosh.py qoshimcha.json assets/lugat.txt)
+          echo "v=$V" >> "$GITHUB_OUTPUT"
+          echo "qoshildi=$QOSHILDI" >> "$GITHUB_OUTPUT"
+          echo "eski_kod=${ESKI_KOD:-0}" >> "$GITHUB_OUTPUT"
+          if [ "$V" = "-1" ] || { [ "$V" = "$OXIRGI" ] && [ "${{ inputs.majburiy }}" != "true" ]; }; then
+            echo "kerak=0" >> "$GITHUB_OUTPUT"; echo "Yangi so'z yo'q - reliz kerak emas"
+          else
+            echo "kerak=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Versiyani oshirish
+        id: versiya
+        if: steps.lugat.outputs.kerak == '1'
+        run: |
+          read NOM KOD < <(python3 vositalar/versiya_oshir.py AndroidManifest.xml "${{ steps.lugat.outputs.eski_kod }}")
+          echo "nom=$NOM" >> "$GITHUB_OUTPUT"
+          echo "kod=$KOD" >> "$GITHUB_OUTPUT"
+
+      - name: Yig'ish va imzolash
+        if: steps.lugat.outputs.kerak == '1'
+        env:
+          KALIT_JKS_B64: ${{ secrets.KALIT_JKS_B64 }}
+          KALIT_PAROL: ${{ secrets.KALIT_PAROL }}
+        run: |
+          echo "$KALIT_JKS_B64" | base64 -d > "$RUNNER_TEMP/kalit.jks"
+          KALIT_FAYL="$RUNNER_TEMP/kalit.jks" CI=1 bash build.sh
+          rm -f "$RUNNER_TEMP/kalit.jks"
+
+      - name: Reliz chiqarish
+        if: steps.lugat.outputs.kerak == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOM=${{ steps.versiya.outputs.nom }}; KOD=${{ steps.versiya.outputs.kod }}
+          mkdir -p eski && gh release download --pattern '*.mp4' -D eski 2>/dev/null || true
+          gh release create "v$NOM" SofOzbekKlaviatura.apk eski/*.mp4 \
+            --title "Sof Özbek klaviatura $NOM ($KOD)" \
+            --notes "Avtomatik 4 kunlik reliz: lug'atga ${{ steps.lugat.outputs.qoshildi }} ta yangi so'z qo'shildi (foydalanuvchilar yozgan). lugat-v${{ steps.lugat.outputs.v }}"
+          git config user.name "Sof Ozbek reliz"
+          git config user.email "reliz@users.noreply.github.com"
+          git add AndroidManifest.xml assets/lugat.txt
+          git commit -m "Avtomatik reliz $NOM: lug'atga yangi so'zlar" && git push

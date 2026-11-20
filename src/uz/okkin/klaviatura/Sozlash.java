@@ -153,6 +153,14 @@ public class Sozlash extends Activity {
             @Override public void qoy(int i) { Sozlamalar.i(c, Sozlamalar.TEBRANISH, i); }
         }));
         l.addView(kalit("Tugma tovuşi", null, Sozlamalar.TOVUSH));
+        final Tovushlar namuna = new Tovushlar(this);
+        l.addView(tanlov("Tovuş turi", Tovushlar.KORINISH, new Ol() {
+            @Override public int ol() { return Tovushlar.indeks(Sozlamalar.tovushTuri(c)); }
+            @Override public void qoy(int i) {
+                Sozlamalar.s(c, Sozlamalar.TOVUSH_TURI, Tovushlar.NOMLAR[i]);
+                namuna.namuna(Tovushlar.NOMLAR[i]);
+            }
+        }));
         l.addView(kalit("Raqamlar qatori", "Harflar ustida 1…0 qatori", Sozlamalar.RAQAMLAR));
         l.addView(kalit("Sōz takliflari", "Yozayotganda tepada 3 ta sōz", Sozlamalar.TAKLIFLAR));
         l.addView(kalit("Avtomatik tuzatiş", "Bōşliq bosilganda xatoni tuzatadi (⌫ — qaytarish)", Sozlamalar.AVTOTUZATISH));

@@ -124,6 +124,12 @@ final class Yangilash {
     static void ornat(final Activity a) {
         String url = sp(a).getString("url", "");
         if (url.isEmpty()) return;
+        // himoya: yangilanish faqat rasmiy GitHub relizidan olinadi (server buzilsa ham boshqa joyga yo'naltirib bo'lmaydi);
+        // Android o'zi ham APK imzosi eski ilovaniki bilan bir xilligini tekshiradi
+        if (!url.startsWith("https://github.com/Asadbek-okkin/sof-ozbek-klaviatura/releases/download/")) {
+            Toast.makeText(a, "Yangilanish manzili ishonçsiz — bekor qilindi", Toast.LENGTH_LONG).show();
+            return;
+        }
         if (Build.VERSION.SDK_INT >= 26 && !a.getPackageManager().canRequestPackageInstalls()) {
             Toast.makeText(a, "Ruxsat bering: «Bu manbadan ōrnatiş», keyin yana «Yangilaş» ni bosing",
                     Toast.LENGTH_LONG).show();

@@ -44,6 +44,7 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
     private TahrirPanel tp;
     private Lugat lugat;
     private Ovoz ovoz;
+    private OvozYozuvchi yozuvchi;
     private Vibrator vib;
     private AudioManager am;
 
@@ -57,6 +58,8 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
     private boolean maxfiy;           // parol, email, havola - takliflarsiz
     private boolean takliflarYoq, avtotuzatish, avtoKattaYoq, ikkiBoshliq, tovush;
     private int tebranish;
+    private String tovushTuri = "standart";
+    private Tovushlar tovushlar;
 
     // avtomatik tuzatishni qaytarish uchun
     private String tuzAsl, tuzYangi, tuzAjrat;
@@ -77,8 +80,10 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
         lugat = Lugat.ol(this);
         Sinxron.qoshimchaniYukla(this);
         ovoz = new Ovoz(this, this);
+        yozuvchi = new OvozYozuvchi(this, this);
         vib = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         am = (AudioManager) getSystemService(AUDIO_SERVICE);
+        tovushlar = new Tovushlar(this);
     }
 
     @Override
@@ -132,6 +137,7 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
         ikkiBoshliq = Sozlamalar.b(this, Sozlamalar.IKKI_BOSHLIQ);
         tovush = Sozlamalar.b(this, Sozlamalar.TOVUSH);
         tebranish = Sozlamalar.tebranish(this);
+        tovushTuri = Sozlamalar.tovushTuri(this);
     }
 
     @Override
@@ -186,6 +192,7 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
         super.onFinishInputView(finishingInput);
         if (kv != null) kv.faolTozala();
         if (ovoz != null && ovoz.ishlayaptimi()) ovoz.toxtat();
+        if (yozuvchi != null) yozuvchi.bekor();
     }
 
     @Override
@@ -448,13 +455,8 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
                 }
             } catch (Exception ignored) { }
         }
-        if (tovush && am != null) {
-            int fx;
-            if (kod == Tartib.OCHIR) fx = AudioManager.FX_KEYPRESS_DELETE;
-            else if (kod == ' ') fx = AudioManager.FX_KEYPRESS_SPACEBAR;
-            else if (kod == Tartib.ENTER) fx = AudioManager.FX_KEYPRESS_RETURN;
-            else fx = AudioManager.FX_KEYPRESS_STANDARD;
-            am.playSoundEffect(fx, 0.5f);
+        if (tovush) {
+            try { tovushlar.chal(tovushTuri, kod); } catch (Exception ignored) { }
         }
     }
 
@@ -675,6 +677,7 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
     }
 
     private void ovozBoshla() {
+        if (yozuvchi.ishlayaptimi()) { yozuvchi.toxtat(); return; }
         if (ovoz.ishlayaptimi()) { ovoz.yetarli(); return; }
         if (Build.VERSION.SDK_INT >= 23
                 && checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -683,11 +686,20 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
             startActivity(i);
             return;
         }
+        h.removeCallbacks(xabarYop);
+        // 1) sof o'zbekcha: ovoz serverda (Gemini) matnga aylanadi; 2) ishlamasa - telefonning o'z xizmati
+        Runnable zaxira = new Runnable() {
+            @Override public void run() { telefonOvozi(); }
+        };
+        String t = til() == Tartib.EN ? "en" : til() == Tartib.RU ? "ru" : "uz";
+        if (!yozuvchi.boshla(t, zaxira)) telefonOvozi();
+    }
+
+    private void telefonOvozi() {
         if (!Ovoz.mavjud(this)) {
-            xabar("Telefonda ovoz taniş xizmati yōq (Google ilovasi kerak)", 3000);
+            xabar("Ovozni tanib bōlmadi: internetni tekşiring", 3000);
             return;
         }
-        h.removeCallbacks(xabarYop);
         ovoz.boshla(ovozTili());
     }
 
@@ -723,6 +735,7 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
 
     @Override
     public void ovozToxtat() {
+        if (yozuvchi.ishlayaptimi()) { yozuvchi.toxtat(); return; }
         ovoz.yetarli();
         h.postDelayed(new Runnable() {
             @Override public void run() {

@@ -266,7 +266,7 @@ final class KlaviaturaView extends View {
         if (kod == Tartib.ENTER && !"↵".equals(enterBelgi)) return false;
         if (kod != Tartib.SHIFT && kod != Tartib.OCHIR && kod != Tartib.TIL
                 && kod != Tartib.EMOJI && kod != Tartib.ENTER) return false;
-        float s = 22 * d, cx = r.centerX(), cy = r.centerY();
+        float s = (kod == Tartib.OCHIR ? 27 : 22) * d, cx = r.centerX(), cy = r.centerY();
         ikonP.setColor(MATN);
         ikonP.setStyle(Paint.Style.STROKE);
         ikonP.setStrokeWidth(1.9f * d);

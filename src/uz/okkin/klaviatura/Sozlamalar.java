@@ -9,7 +9,10 @@ final class Sozlamalar {
             TOVUSH = "tovush", TEBRANISH = "tebranish", TAKLIFLAR = "takliflar",
             AVTOTUZATISH = "avtotuzatish", AVTO_KATTA = "avto_katta", IKKI_BOSHLIQ = "ikki_boshliq",
             INGLIZCHA = "inglizcha", RUSCHA = "ruscha", OGIRISH_YOZUV = "ogirish_yozuv",
-            HISSA = "hissa"; // lug'atni boyitishga yordam (yangi so'zlarni anonim yuborish)
+            HISSA = "hissa", // lug'atni boyitishga yordam (yangi so'zlarni anonim yuborish)
+            TOVUSH_TURI = "tovush_turi", OVOZ_SERVER = "ovoz_server";
+
+    static String tovushTuri(Context c) { return sp(c).getString(TOVUSH_TURI, "standart"); }
 
     static final String[] MAVZULAR = {"avto", "qorongi", "yorug", "kok", "qora"};
     static final String[] MAVZU_NOMLARI = {"Telefonga moslaşsin", "Qorong'i", "Yorug'", "Tungi kōk", "Qop-qora (AMOLED)"};
