@@ -132,7 +132,28 @@ final class Sinxron {
 
     // ---------------- fikr ----------------
 
-    static void fikrYubor(final Context c, final String matn, final Javob j) {
+    interface Matn { void tayyor(String s); }
+
+    /** Adminning Telegram username'i (server Telegram'dan oladi); topilmasa null. */
+    static void aloqa(Context c, final Matn j) {
+        new Thread(new Runnable() {
+            @Override public void run() {
+                String u = null;
+                try {
+                    JSONObject o = new JSONObject(get("/aloqa"));
+                    u = o.optString("telegram", "");
+                    if (u.isEmpty() || "null".equals(u)) u = o.optString("bot", "");
+                    if (!u.matches("[A-Za-z0-9_]{4,40}")) u = null;
+                } catch (Exception ignored) { }
+                final String r = u;
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override public void run() { j.tayyor(r); }
+                });
+            }
+        }, "aloqa").start();
+    }
+
+    static void fikrYubor(final Context c, final String matn, final byte[] rasm, final Javob j) {
         final Context ac = c.getApplicationContext();
         new Thread(new Runnable() {
             @Override public void run() {
@@ -141,6 +162,7 @@ final class Sinxron {
                     JSONObject b = asos(ac);
                     b.put("tur", "fikr");
                     b.put("matn", matn);
+                    if (rasm != null) b.put("rasm", android.util.Base64.encodeToString(rasm, android.util.Base64.NO_WRAP));
                     ok = post("/fikr", b);
                 } catch (Exception ignored) { }
                 final boolean r = ok;

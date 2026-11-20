@@ -28,6 +28,15 @@ public class Sozlash extends Activity {
     private TextView holat1, holat2;
     private LinearLayout yangiKarta;
     private TextView yangiMatn;
+    private LinearLayout k1, k2, ildiz;
+    private ImageView ikonka;
+    private android.animation.ObjectAnimator puls;
+    private View pulsKarta;
+    private boolean pickerOchildi, tabriklandi, animatsiyaBoldi;
+    // fikrga qo'shiladigan skrinshot
+    private byte[] fikrRasm;
+    private TextView fikrRasmHolat;
+    private static final int RASM_TANLASH = 7;
 
     @Override
     protected void onCreate(Bundle b) {
@@ -47,7 +56,7 @@ public class Sozlash extends Activity {
         LinearLayout bosh = new LinearLayout(this);
         bosh.setOrientation(LinearLayout.HORIZONTAL);
         bosh.setGravity(Gravity.CENTER_VERTICAL);
-        ImageView ikonka = new ImageView(this);
+        ikonka = new ImageView(this);
         ikonka.setImageResource(R.mipmap.ic_launcher);
         bosh.addView(ikonka, new LinearLayout.LayoutParams(dp(56), dp(56)));
         LinearLayout nomlar = new LinearLayout(this);
@@ -80,7 +89,7 @@ public class Sozlash extends Activity {
         l.addView(izoh);
 
         // 1-qadam
-        LinearLayout k1 = karta();
+        k1 = karta();
         qadam1 = matn("1. Klaviaturani yoqiş", 17, MATN, true);
         holat1 = matn("", 14, KULRANG, false);
         k1.addView(qadam1);
@@ -93,7 +102,7 @@ public class Sozlash extends Activity {
         l.addView(k1, kartaLp());
 
         // 2-qadam
-        LinearLayout k2 = karta();
+        k2 = karta();
         qadam2 = matn("2. Asosiy klaviatura qiliş", 17, MATN, true);
         holat2 = matn("", 14, KULRANG, false);
         k2.addView(qadam2);
@@ -105,6 +114,18 @@ public class Sozlash extends Activity {
             }
         });
         l.addView(k2, kartaLp());
+
+        // qo'llanma videosi
+        LinearLayout vk = karta();
+        vk.setBackground(fon(0xFF1B3A63, 14));
+        vk.addView(matn("📹 Qanday işlatiladi — qisqa video (1:43)", 17, MATN, true));
+        vk.addView(matn("Ōrnatiş, yangi harflar, sōz takliflari, ovoz, ōgiriş va fişkalar", 14, 0xFF8AB4F8, false));
+        vk.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { videoKorsat(); }
+        });
+        LinearLayout.LayoutParams vlp = kartaLp();
+        vlp.topMargin = dp(14);
+        l.addView(vk, vlp);
 
         // 3-qadam: sinov
         TextView q3 = matn("3. Sinab kōring", 17, MATN, true);
@@ -130,6 +151,13 @@ public class Sozlash extends Activity {
         LinearLayout.LayoutParams flp = kartaLp();
         flp.topMargin = dp(18);
         l.addView(fk, flp);
+        LinearLayout ak = karta();
+        ak.addView(matn("✈️ Adminga Telegramda yoziş", 17, MATN, true));
+        ak.addView(matn("Savol, taklif yoki muammo bōlsa — to'g'ridan-to'g'ri yozing", 14, KULRANG, false));
+        ak.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { admingaYoz(); }
+        });
+        l.addView(ak, kartaLp());
 
         // ---------- sozlamalar ----------
         TextView sar = matn("Sozlamalar", 17, MATN, true);
@@ -212,6 +240,103 @@ public class Sozlash extends Activity {
         sv.setFillViewport(true);
         sv.addView(l);
         setContentView(sv);
+        ildiz = l;
+        if (yoqilganmi() && tanlanganmi()) Sinxron.sp(this).edit().putBoolean("sozlanmagan", false).apply();
+        if (b == null) kirishAnimatsiyasi();
+    }
+
+    // ======================================================================
+    //  Animatsiyalar
+    // ======================================================================
+
+    /** Ilova ochilganda: ikonka "sakrab" chiqadi, kartalar pastdan ketma-ket suzib keladi. */
+    private void kirishAnimatsiyasi() {
+        animatsiyaBoldi = true;
+        android.view.animation.DecelerateInterpolator sekin = new android.view.animation.DecelerateInterpolator(2f);
+        for (int i = 0; i < ildiz.getChildCount(); i++) {
+            View v = ildiz.getChildAt(i);
+            v.setAlpha(0f);
+            v.setTranslationY(dp(36));
+            v.animate().alpha(1f).translationY(0).setStartDelay(120 + Math.min(i, 12) * 55L)
+                    .setDuration(480).setInterpolator(sekin).start();
+        }
+        ikonka.setScaleX(0.3f);
+        ikonka.setScaleY(0.3f);
+        ikonka.setRotation(-30f);
+        ikonka.animate().scaleX(1f).scaleY(1f).rotation(0f).setStartDelay(150).setDuration(700)
+                .setInterpolator(new android.view.animation.OvershootInterpolator(2.2f)).start();
+    }
+
+    /** Navbatdagi qadam kartasi yumshoq "nafas oladi" - qayerni bosish kerakligi ko'rinib tursin. */
+    private void pulsla(View karta) {
+        if (pulsKarta == karta) return;
+        pulsToxtat();
+        if (karta == null) return;
+        pulsKarta = karta;
+        android.animation.PropertyValuesHolder sx = android.animation.PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.035f);
+        android.animation.PropertyValuesHolder sy = android.animation.PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.035f);
+        puls = android.animation.ObjectAnimator.ofPropertyValuesHolder(karta, sx, sy);
+        puls.setDuration(850);
+        puls.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+        puls.setRepeatMode(android.animation.ValueAnimator.REVERSE);
+        puls.setStartDelay(900);
+        puls.start();
+        karta.setBackground(fon(0xFF26364D, 14));
+    }
+
+    private void pulsToxtat() {
+        if (puls != null) puls.cancel();
+        if (pulsKarta != null) {
+            pulsKarta.setScaleX(1f);
+            pulsKarta.setScaleY(1f);
+            pulsKarta.setBackground(fon(KARTA, 14));
+        }
+        puls = null;
+        pulsKarta = null;
+    }
+
+    /** Ikkala qadam bajarilganda - tabrik. */
+    private void tabrikla() {
+        final TextView t = matn("🎉", 64, MATN, false);
+        t.setGravity(Gravity.CENTER);
+        final android.widget.FrameLayout yuza = (android.widget.FrameLayout) getWindow().getDecorView().findViewById(android.R.id.content);
+        yuza.addView(t, new android.widget.FrameLayout.LayoutParams(-1, -1));
+        t.setScaleX(0f);
+        t.setScaleY(0f);
+        t.animate().scaleX(1.4f).scaleY(1.4f).setDuration(450)
+                .setInterpolator(new android.view.animation.OvershootInterpolator(3f))
+                .withEndAction(new Runnable() {
+                    @Override public void run() {
+                        t.animate().alpha(0f).scaleX(2f).scaleY(2f).setStartDelay(500).setDuration(500)
+                                .withEndAction(new Runnable() { @Override public void run() { yuza.removeView(t); } }).start();
+                    }
+                }).start();
+        android.widget.Toast.makeText(this, "Tayyor! Endi istalgan joyda yangi alifboda yozing 🎉",
+                android.widget.Toast.LENGTH_LONG).show();
+    }
+
+    // ======================================================================
+    //  Qo'llanma videosi
+    // ======================================================================
+
+    private void videoKorsat() {
+        final android.widget.VideoView vv = new android.widget.VideoView(this);
+        android.widget.FrameLayout f = new android.widget.FrameLayout(this);
+        f.setBackgroundColor(0xFF000000);
+        android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(-1, -1);
+        lp.gravity = Gravity.CENTER;
+        f.addView(vv, lp);
+        final android.app.Dialog d = new android.app.Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+        d.setContentView(f);
+        android.widget.MediaController mc = new android.widget.MediaController(this);
+        mc.setAnchorView(vv);
+        vv.setMediaController(mc);
+        vv.setVideoURI(android.net.Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.qollanma));
+        vv.setOnCompletionListener(new android.media.MediaPlayer.OnCompletionListener() {
+            @Override public void onCompletion(android.media.MediaPlayer mp) { d.dismiss(); }
+        });
+        d.show();
+        vv.start();
     }
 
     @Override
@@ -242,6 +367,26 @@ public class Sozlash extends Activity {
         holat1.setTextColor(yoq ? YASHIL : KULRANG);
         holat2.setText(tanl ? "✅ Tanlangan — tayyor!" : "Bosing va «Sof Özbek» ni tanlang");
         holat2.setTextColor(tanl ? YASHIL : KULRANG);
+        // navbatdagi qadamni ko'rsatib turamiz
+        pulsla(!yoq ? k1 : !tanl ? k2 : null);
+        // 1-qadam bajarilib qaytilganda - 2-qadam oynasi o'zi ochiladi (qulay o'rnatish)
+        if (yoq && !tanl && !pickerOchildi && hasWindowFocus()) {
+            pickerOchildi = true;
+            ildiz.postDelayed(new Runnable() {
+                @Override public void run() {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null && !tanlanganmi()) imm.showInputMethodPicker();
+                }
+            }, 700);
+        }
+        if (yoq && tanl && !tabriklandi) {
+            tabriklandi = true;
+            // birinchi marta tayyor bo'lganda (ilova oldin sozlangan bo'lsa - tabrik yo'q)
+            if (Sinxron.sp(this).getBoolean("sozlanmagan", true)) {
+                Sinxron.sp(this).edit().putBoolean("sozlanmagan", false).apply();
+                tabrikla();
+            }
+        }
     }
 
     private boolean yoqilganmi() {
@@ -266,19 +411,90 @@ public class Sozlash extends Activity {
         }
     }
 
+    /** «Adminga yozish»: adminning Telegram akkaunti (server aytadi) ochiladi. */
+    private void admingaYoz() {
+        android.widget.Toast.makeText(this, "Telegram oçilmoqda...", android.widget.Toast.LENGTH_SHORT).show();
+        Sinxron.aloqa(this, new Sinxron.Matn() {
+            @Override public void tayyor(String username) {
+                String u = username != null ? username : "claude_asadbek_bot";
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://t.me/" + u)));
+                } catch (Exception e) {
+                    android.widget.Toast.makeText(Sozlash.this, "Telegram topilmadi: @" + u, android.widget.Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int kod, int natija, Intent data) {
+        super.onActivityResult(kod, natija, data);
+        if (kod != RASM_TANLASH || natija != RESULT_OK || data == null || data.getData() == null) return;
+        try {
+            // rasmni kichraytirib JPEG qilamiz (ko'pi bilan 1280 px, ~200-400 KB)
+            android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options();
+            o.inJustDecodeBounds = true;
+            java.io.InputStream in = getContentResolver().openInputStream(data.getData());
+            android.graphics.BitmapFactory.decodeStream(in, null, o);
+            in.close();
+            int ol = 1;
+            while (Math.max(o.outWidth, o.outHeight) / ol > 2560) ol *= 2;
+            o = new android.graphics.BitmapFactory.Options();
+            o.inSampleSize = ol;
+            in = getContentResolver().openInputStream(data.getData());
+            android.graphics.Bitmap bm = android.graphics.BitmapFactory.decodeStream(in, null, o);
+            in.close();
+            if (bm == null) throw new Exception("rasm emas");
+            float k = 1280f / Math.max(bm.getWidth(), bm.getHeight());
+            if (k < 1f) bm = android.graphics.Bitmap.createScaledBitmap(bm, (int) (bm.getWidth() * k), (int) (bm.getHeight() * k), true);
+            java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+            bm.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, bos);
+            fikrRasm = bos.toByteArray();
+            if (fikrRasmHolat != null) fikrRasmHolat.setText("✅ Skrinşot qōşildi (" + fikrRasm.length / 1024 + " KB)");
+        } catch (Exception e) {
+            fikrRasm = null;
+            android.widget.Toast.makeText(this, "Rasmni oçib bōlmadi", android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void fikrOynasi() {
+        fikrRasm = null;
+        LinearLayout u = new LinearLayout(this);
+        u.setOrientation(LinearLayout.VERTICAL);
+        u.setPadding(dp(20), dp(8), dp(20), 0);
         final EditText e = new EditText(this);
         e.setHint("Fikringiz...");
         e.setMinLines(3);
         e.setGravity(Gravity.TOP);
+        u.addView(e);
+        TextView rasm = matn("📷 Skrinşot qōşiş", 16, 0xFF8AB4F8, true);
+        rasm.setPadding(0, dp(14), 0, dp(4));
+        rasm.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+                i.setType("image/*");
+                try { startActivityForResult(Intent.createChooser(i, "Skrinşotni tanlang"), RASM_TANLASH); }
+                catch (Exception ignored) { }
+            }
+        });
+        u.addView(rasm);
+        fikrRasmHolat = matn("", 14, YASHIL, false);
+        u.addView(fikrRasmHolat);
+        TextView tg = matn("✈️ Yoki adminga Telegramda yozing", 15, KULRANG, false);
+        tg.setPadding(0, dp(12), 0, dp(6));
+        tg.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { admingaYoz(); }
+        });
+        u.addView(tg);
         new android.app.AlertDialog.Builder(this)
                 .setTitle("Fikr yoki taklif")
-                .setView(e)
+                .setView(u)
                 .setPositiveButton("Yuboriş", new android.content.DialogInterface.OnClickListener() {
                     @Override public void onClick(android.content.DialogInterface d, int w) {
                         String m = e.getText().toString().trim();
-                        if (m.isEmpty()) return;
-                        Sinxron.fikrYubor(Sozlash.this, m, new Sinxron.Javob() {
+                        if (m.isEmpty() && fikrRasm == null) return;
+                        if (m.isEmpty()) m = "(skrinşot)";
+                        Sinxron.fikrYubor(Sozlash.this, m, fikrRasm, new Sinxron.Javob() {
                             @Override public void tayyor(boolean ok) {
                                 android.widget.Toast.makeText(Sozlash.this, ok
                                         ? "Rahmat! Fikringiz yuborildi 🙏"

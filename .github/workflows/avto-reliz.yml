@@ -1,11 +1,11 @@
-# 4 kunlik reja: har 4 kunda serverdagi tasdiqlangan yangi so'zlar ilova lug'atiga qo'shiladi va
+# Qo'lda ishga tushiriladigan reliz: serverdagi tasdiqlangan yangi so'zlar ilova lug'atiga qo'shiladi va
 # yangi versiya avtomatik yig'ilib, GitHub relizi sifatida chiqadi. Telefonlar va Telegram bot uni o'zi topadi.
 # Kompyuter yoki Claude kerak emas: hammasi GitHub serverlarida ishlaydi.
-name: Avtomatik reliz (4 kunlik reja)
+name: Reliz (qo'lda)
 
+# Jadval (har 4 kunda) o'chirildi - foydalanuvchi talabi: yangi versiya kamchiliklar tuzatilganda qo'lda chiqadi.
+# Yangi so'zlar baribir har kuni serverdan telefonlarga boradi. Qo'lda ishga tushirish: Actions -> Run workflow.
 on:
-  schedule:
-    - cron: "0 4 */4 * *"
   workflow_dispatch:
     inputs:
       majburiy:
