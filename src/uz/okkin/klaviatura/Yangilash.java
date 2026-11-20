@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
  */
 final class Yangilash {
     static final String MANBA = "https://inok.uz/claude-pc/reliz/sof-ozbek-klaviatura";
+    static final String ZAXIRA = "https://api.github.com/repos/Asadbek-okkin/sof-ozbek-klaviatura/releases/latest";
     private static final long ORALIQ = 6 * 60 * 60 * 1000L; // 6 soatda bir
 
     interface Natija { void tayyor(boolean yangiBor); }
@@ -69,7 +70,13 @@ final class Yangilash {
             @Override public void run() {
                 boolean bor = false;
                 try {
-                    JSONObject r = new JSONObject(ol(MANBA));
+                    JSONObject r;
+                    try {
+                        r = new JSONObject(ol(MANBA));
+                    } catch (Exception serverYoq) {
+                        // server ishlamasa - to'g'ridan-to'g'ri GitHub
+                        r = new JSONObject(ol(ZAXIRA));
+                    }
                     String nom = r.optString("name", r.optString("tag_name", ""));
                     Matcher m = Pattern.compile("\\((\\d+)\\)").matcher(nom);
                     int kod = m.find() ? Integer.parseInt(m.group(1)) : 0;

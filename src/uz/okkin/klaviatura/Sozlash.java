@@ -32,6 +32,7 @@ public class Sozlash extends Activity {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        Sinxron.xatoUshlagich(this);
         if (Build.VERSION.SDK_INT >= 21) {
             getWindow().setStatusBarColor(FON);
             getWindow().setNavigationBarColor(FON);
@@ -119,6 +120,17 @@ public class Sozlash extends Activity {
         sinov.setBackground(fon(KARTA, 14));
         l.addView(sinov);
 
+        // ---------- fikr ----------
+        LinearLayout fk = karta();
+        fk.addView(matn("💬 Fikr yoki taklif yuboriş", 17, MATN, true));
+        fk.addView(matn("Nima yoqdi, nima yetişmayapti — yozing. Keyingi versiyalar şu fikrlar asosida çiqadi.", 14, KULRANG, false));
+        fk.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { fikrOynasi(); }
+        });
+        LinearLayout.LayoutParams flp = kartaLp();
+        flp.topMargin = dp(18);
+        l.addView(fk, flp);
+
         // ---------- sozlamalar ----------
         TextView sar = matn("Sozlamalar", 17, MATN, true);
         sar.setPadding(0, dp(24), 0, dp(4));
@@ -148,6 +160,10 @@ public class Sozlash extends Activity {
         l.addView(kalit("Ikki marta bōşliq — nuqta", null, Sozlamalar.IKKI_BOSHLIQ));
         l.addView(kalit("English klaviatura", "🌐 bilan ōtiş", Sozlamalar.INGLIZCHA));
         l.addView(kalit("Русская клавиатура", "🌐 bilan ōtiş", Sozlamalar.RUSCHA));
+        l.addView(kalit("Lug'atni boyitişga yordam",
+                "Lug'atda yōq, siz kōp yozgan alohida sōzlar anonim yuboriladi. Gap, parol va "
+                        + "şaxsiy matn hech qaçon yuborilmaydi. Kamida 3 kişi yozgan sōz hammaning lug'atiga qōşiladi.",
+                Sozlamalar.HISSA));
         TextView unut = matn("Ōrganilgan sōzlarni ōçiriş", 15, 0xFFEF5350, false);
         unut.setPadding(dp(4), dp(16), dp(4), dp(8));
         unut.setOnClickListener(new View.OnClickListener() {
@@ -168,7 +184,7 @@ public class Sozlash extends Activity {
 
         TextView yordam = matn(
                 "Maslahatlar\n"
-                        + "• Tepadagi satr: 📋 bufer, ↔ tahrir, o→ö eski matnni yangi alifboga ōgiriş, "
+                        + "• Tepadagi satr: 📋 bufer, o→ö eski matnni yangi alifboga ōgiriş, "
                         + "🎨 mavzu, ⚙ sozlamalar, 🎤 ovozli yozish\n"
                         + "• Avtomatik tuzatişdan keyin ⌫ bossangiz — yozganingiz qaytadi\n"
                         + "• ☺ — smayliklar; bosib tursangiz vergul va tutuq ʼ\n"
@@ -240,6 +256,32 @@ public class Sozlash extends Activity {
         } catch (Exception e) {
             return "";
         }
+    }
+
+    private void fikrOynasi() {
+        final EditText e = new EditText(this);
+        e.setHint("Fikringiz...");
+        e.setMinLines(3);
+        e.setGravity(Gravity.TOP);
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Fikr yoki taklif")
+                .setView(e)
+                .setPositiveButton("Yuboriş", new android.content.DialogInterface.OnClickListener() {
+                    @Override public void onClick(android.content.DialogInterface d, int w) {
+                        String m = e.getText().toString().trim();
+                        if (m.isEmpty()) return;
+                        Sinxron.fikrYubor(Sozlash.this, m, new Sinxron.Javob() {
+                            @Override public void tayyor(boolean ok) {
+                                android.widget.Toast.makeText(Sozlash.this, ok
+                                        ? "Rahmat! Fikringiz yuborildi 🙏"
+                                        : "Yuborib bōlmadi. Internetni tekşirib qayta urinib kōring.",
+                                        android.widget.Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+                })
+                .setNegativeButton("Bekor", null)
+                .show();
     }
 
     private interface Ol {

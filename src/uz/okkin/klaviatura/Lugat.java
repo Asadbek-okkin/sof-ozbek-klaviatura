@@ -23,6 +23,30 @@ final class Lugat {
     private int[] chastota = new int[0];
     private final Map<String, Integer> organgan = new HashMap<>();
     private final SharedPreferences sp;
+    /** Serverdan kelgan qo'shimcha so'zlar (boshqa foydalanuvchilar yozgan, tasdiqlangan). */
+    private volatile java.util.TreeSet<String> qoshimcha = new java.util.TreeSet<>();
+    private static final int QOSHIMCHA_CHASTOTA = 300;
+
+    /** Qo'shimcha so'zlarni o'rnatish (Sinxron chaqiradi). */
+    void qoshimchaniQoy(java.util.Collection<String> s) {
+        qoshimcha = new java.util.TreeSet<>(s);
+    }
+
+    /** Asosiy (ilova ichidagi) lug'atda bormi - faqat shu. */
+    boolean bazadaBormi(String w) {
+        String k = w.toLowerCase();
+        return (tayyor && indeks(k) >= 0) || qoshimcha.contains(k);
+    }
+
+    /** O'rganilgan, lekin lug'atda yo'q so'zlar (kamida n marta yozilgan) - lug'atni boyitish uchun. */
+    List<String> yangiSozlar(int kamida) {
+        List<String> r = new ArrayList<>();
+        if (!tayyor) return r;
+        for (Map.Entry<String, Integer> e : organgan.entrySet()) {
+            if (e.getValue() >= kamida && !bazadaBormi(e.getKey())) r.add(e.getKey());
+        }
+        return r;
+    }
 
     static Lugat ol(Context c) {
         if (bitta == null) {
@@ -98,7 +122,7 @@ final class Lugat {
     boolean bormi(String w) {
         String k = w.toLowerCase();
         if (organgan.containsKey(k) && organgan.get(k) >= 2) return true;
-        return tayyor && indeks(k) >= 0;
+        return (tayyor && indeks(k) >= 0) || qoshimcha.contains(k);
     }
 
     /** Shu bilan boshlanadigan eng ko'p ishlatiladigan so'zlar. */
@@ -117,6 +141,9 @@ final class Lugat {
                 joyla(eng, engO, sozlar[i], ogirlik(sozlar[i], chastota[i]));
                 korilgan.add(sozlar[i]);
             }
+        }
+        for (String w : qoshimcha.subSet(p, p + '￿')) {
+            if (!korilgan.contains(w)) { joyla(eng, engO, w, ogirlik(w, QOSHIMCHA_CHASTOTA)); korilgan.add(w); }
         }
         for (Map.Entry<String, Integer> e : organgan.entrySet()) {
             String w = e.getKey();
@@ -161,8 +188,10 @@ final class Lugat {
         for (String nz : nomzodlar) {
             if (nz.equals(w)) continue;
             int i = indeks(nz);
-            if (i < 0) continue;
-            long o = ogirlik(nz, chastota[i]);
+            long o;
+            if (i >= 0) o = ogirlik(nz, chastota[i]);
+            else if (qoshimcha.contains(nz)) o = ogirlik(nz, QOSHIMCHA_CHASTOTA);
+            else continue;
             // eski yozuvdan kelgan odatiy xatolarga ustunlik (o->ö, s->ş, c->ç, g->ğ)
             if (yaqinHarf(w, nz)) o *= 4;
             if (o > engO) { engO = o; eng = nz; }

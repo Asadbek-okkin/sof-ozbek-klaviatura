@@ -8,4 +8,4 @@ bash build.sh
 NOM=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
 KOD=$(grep -o 'versionCode="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
 IZOH="${1:-Yangi versiya}"
-gh release create "v$NOM" SofOzbekKlaviatura.apk --title "Sof Özbek klaviatura $NOM ($KOD)" --notes "$IZOH"
+gh release create "v$NOM" SofOzbekKlaviatura.apk videolar/*.mp4 --title "Sof Özbek klaviatura $NOM ($KOD)" --notes "$IZOH"

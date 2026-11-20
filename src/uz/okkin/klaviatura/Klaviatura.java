@@ -73,7 +73,9 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
     @Override
     public void onCreate() {
         super.onCreate();
+        Sinxron.xatoUshlagich(this);
         lugat = Lugat.ol(this);
+        Sinxron.qoshimchaniYukla(this);
         ovoz = new Ovoz(this, this);
         vib = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         am = (AudioManager) getSystemService(AUDIO_SERVICE);
@@ -162,6 +164,7 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
         avtoKatta();
         takliflarniYangila();
         yangiVersiyaniAyt();
+        if (lugat.tayyormi()) Sinxron.kunlik(this);
     }
 
     /** Yangi versiya bo'lsa - kuniga bir marta tepada eslatadi. */

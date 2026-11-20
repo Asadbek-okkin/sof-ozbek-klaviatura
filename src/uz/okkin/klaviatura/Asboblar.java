@@ -28,7 +28,7 @@ final class Asboblar extends View {
     }
 
     static final int BUFER = 0, TAHRIR = 1, OGIR = 2, MAVZU = 3, SOZLAMA = 4, OVOZ = 5;
-    private static final int[] TARTIB = {BUFER, TAHRIR, OGIR, MAVZU, SOZLAMA};
+    private static final int[] TARTIB = {BUFER, OGIR, MAVZU, SOZLAMA}; // tahrir paneli olib tashlandi (foydalanuvchi talabi)
 
     private static final int R_ASBOB = 0, R_TAKLIF = 1, R_XABAR = 2;
 

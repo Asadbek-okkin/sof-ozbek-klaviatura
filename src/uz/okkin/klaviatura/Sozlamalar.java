@@ -8,7 +8,8 @@ final class Sozlamalar {
     static final String MAVZU = "mavzu", BALANDLIK = "balandlik", RAQAMLAR = "raqamlar",
             TOVUSH = "tovush", TEBRANISH = "tebranish", TAKLIFLAR = "takliflar",
             AVTOTUZATISH = "avtotuzatish", AVTO_KATTA = "avto_katta", IKKI_BOSHLIQ = "ikki_boshliq",
-            INGLIZCHA = "inglizcha", RUSCHA = "ruscha", OGIRISH_YOZUV = "ogirish_yozuv";
+            INGLIZCHA = "inglizcha", RUSCHA = "ruscha", OGIRISH_YOZUV = "ogirish_yozuv",
+            HISSA = "hissa"; // lug'atni boyitishga yordam (yangi so'zlarni anonim yuborish)
 
     static final String[] MAVZULAR = {"avto", "qorongi", "yorug", "kok", "qora"};
     static final String[] MAVZU_NOMLARI = {"Telefonga moslaşsin", "Qorong'i", "Yorug'", "Tungi kōk", "Qop-qora (AMOLED)"};
