@@ -482,3 +482,13 @@ if __name__ == "__main__":
                     ("4-ovoz-va-ogirish", v4_ovoz_ogirish), ("5-fishkalar", v5_fishkalar)]:
         fn(os.path.join(papka, nom + ".mp4"))
         print("tayyor:", nom)
+    # hammasini bitta to'liq qo'llanmaga birlashtirish
+    royxat = os.path.join(papka, "royxat.txt")
+    with open(royxat, "w", encoding="utf-8") as f:
+        for nom in ["1-ornatish", "2-yangi-harflar", "3-soz-takliflari", "4-ovoz-va-ogirish", "5-fishkalar"]:
+            f.write(f"file '{nom}.mp4'\n")
+    subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), "-loglevel", "error", "-y", "-f", "concat", "-safe", "0",
+                    "-i", royxat, "-c", "copy", "-movflags", "+faststart",
+                    os.path.join(papka, "0-toliq-qollanma.mp4")], check=True)
+    os.remove(royxat)
+    print("tayyor: 0-toliq-qollanma")
