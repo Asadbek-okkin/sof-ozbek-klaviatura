@@ -30,7 +30,6 @@ public class Sozlash extends Activity {
     private TextView yangiMatn;
     private LinearLayout k1, k2, ildiz;
     private ImageView ikonka;
-    private android.animation.ObjectAnimator puls;
     private View pulsKarta;
     private boolean pickerOchildi, tabriklandi, animatsiyaBoldi;
     // fikrga qo'shiladigan skrinshot
@@ -249,68 +248,122 @@ public class Sozlash extends Activity {
     //  Animatsiyalar
     // ======================================================================
 
-    /** Ilova ochilganda: ikonka "sakrab" chiqadi, kartalar pastdan ketma-ket suzib keladi. */
+    /**
+     * Ilova ochilganda: to'liq ekranli kirish (logotip aylanib kattalashadi, nom paydo bo'ladi),
+     * keyin parda ochilib, kartalar pastdan ketma-ket suzib keladi.
+     */
     private void kirishAnimatsiyasi() {
         animatsiyaBoldi = true;
-        android.view.animation.DecelerateInterpolator sekin = new android.view.animation.DecelerateInterpolator(2f);
+        final android.view.animation.DecelerateInterpolator sekin = new android.view.animation.DecelerateInterpolator(2.2f);
+        final android.view.animation.OvershootInterpolator sakra = new android.view.animation.OvershootInterpolator(2.4f);
+        final android.widget.FrameLayout yuza = (android.widget.FrameLayout) findViewById(android.R.id.content);
+
+        // kartalar avval yashirin
         for (int i = 0; i < ildiz.getChildCount(); i++) {
             View v = ildiz.getChildAt(i);
             v.setAlpha(0f);
-            v.setTranslationY(dp(36));
-            v.animate().alpha(1f).translationY(0).setStartDelay(120 + Math.min(i, 12) * 55L)
-                    .setDuration(480).setInterpolator(sekin).start();
+            v.setTranslationY(dp(70));
         }
-        ikonka.setScaleX(0.3f);
-        ikonka.setScaleY(0.3f);
-        ikonka.setRotation(-30f);
-        ikonka.animate().scaleX(1f).scaleY(1f).rotation(0f).setStartDelay(150).setDuration(700)
-                .setInterpolator(new android.view.animation.OvershootInterpolator(2.2f)).start();
+
+        // kirish pardasi
+        final LinearLayout parda = new LinearLayout(this);
+        parda.setOrientation(LinearLayout.VERTICAL);
+        parda.setGravity(Gravity.CENTER);
+        parda.setBackgroundColor(FON);
+        parda.setClickable(true);
+        final ImageView logo = new ImageView(this);
+        logo.setImageResource(R.mipmap.ic_launcher);
+        parda.addView(logo, new LinearLayout.LayoutParams(dp(120), dp(120)));
+        final TextView nom = matn("Sof Özbek", 30, MATN, true);
+        nom.setGravity(Gravity.CENTER);
+        nom.setPadding(0, dp(18), 0, 0);
+        parda.addView(nom);
+        final TextView shior = matn("Ö  Ş  Ç  Ğ  —  yangi alifboda yozing", 16, 0xFF8AB4F8, false);
+        shior.setGravity(Gravity.CENTER);
+        shior.setPadding(0, dp(8), 0, 0);
+        parda.addView(shior);
+        yuza.addView(parda, new android.widget.FrameLayout.LayoutParams(-1, -1));
+
+        nom.setAlpha(0f);
+        shior.setAlpha(0f);
+        Harakat.boshla(750, 80, sakra, new Harakat.Qadam() {
+            @Override public void qadam(float t) {
+                logo.setScaleX(0.15f + 0.85f * t);
+                logo.setScaleY(0.15f + 0.85f * t);
+                logo.setRotation(-200f * (1 - t));
+                logo.setAlpha(Math.min(1f, t * 2));
+            }
+        }, null);
+        Harakat.boshla(450, 500, sekin, new Harakat.Qadam() {
+            @Override public void qadam(float t) { nom.setAlpha(t); nom.setTranslationY(dp(24) * (1 - t)); }
+        }, null);
+        Harakat.boshla(450, 700, sekin, new Harakat.Qadam() {
+            @Override public void qadam(float t) { shior.setAlpha(t); shior.setTranslationY(dp(24) * (1 - t)); }
+        }, null);
+        // parda yuqoriga ko'tarilib yo'qoladi
+        Harakat.boshla(550, 1500, new android.view.animation.AccelerateDecelerateInterpolator(), new Harakat.Qadam() {
+            @Override public void qadam(float t) {
+                parda.setAlpha(1f - t);
+                parda.setTranslationY(-parda.getHeight() * 0.25f * t);
+                logo.setScaleX(1f + 0.3f * t);
+                logo.setScaleY(1f + 0.3f * t);
+            }
+        }, new Runnable() { @Override public void run() { yuza.removeView(parda); } });
+
+        // kartalar ketma-ket suzib keladi
+        for (int i = 0; i < ildiz.getChildCount(); i++) {
+            final View v = ildiz.getChildAt(i);
+            Harakat.boshla(650, 1650 + Math.min(i, 14) * 70L, sekin, new Harakat.Qadam() {
+                @Override public void qadam(float t) { v.setAlpha(t); v.setTranslationY(dp(70) * (1 - t)); }
+            }, null);
+        }
+        ikonka.setScaleX(0f);
+        ikonka.setScaleY(0f);
+        Harakat.boshla(700, 1700, sakra, new Harakat.Qadam() {
+            @Override public void qadam(float t) { ikonka.setScaleX(t); ikonka.setScaleY(t); ikonka.setRotation(-45f * (1 - t)); }
+        }, null);
     }
 
+    private Harakat pulsH;
+
     /** Navbatdagi qadam kartasi yumshoq "nafas oladi" - qayerni bosish kerakligi ko'rinib tursin. */
-    private void pulsla(View karta) {
+    private void pulsla(final View karta) {
         if (pulsKarta == karta) return;
         pulsToxtat();
         if (karta == null) return;
         pulsKarta = karta;
-        android.animation.PropertyValuesHolder sx = android.animation.PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.035f);
-        android.animation.PropertyValuesHolder sy = android.animation.PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.035f);
-        puls = android.animation.ObjectAnimator.ofPropertyValuesHolder(karta, sx, sy);
-        puls.setDuration(850);
-        puls.setRepeatCount(android.animation.ValueAnimator.INFINITE);
-        puls.setRepeatMode(android.animation.ValueAnimator.REVERSE);
-        puls.setStartDelay(900);
-        puls.start();
         karta.setBackground(fon(0xFF26364D, 14));
+        pulsH = Harakat.takrorla(800, animatsiyaBoldi ? 2600 : 300, new Harakat.Qadam() {
+            @Override public void qadam(float t) {
+                karta.setScaleX(1f + 0.04f * t);
+                karta.setScaleY(1f + 0.04f * t);
+            }
+        });
     }
 
     private void pulsToxtat() {
-        if (puls != null) puls.cancel();
+        if (pulsH != null) pulsH.toxtat();
         if (pulsKarta != null) {
             pulsKarta.setScaleX(1f);
             pulsKarta.setScaleY(1f);
             pulsKarta.setBackground(fon(KARTA, 14));
         }
-        puls = null;
+        pulsH = null;
         pulsKarta = null;
     }
 
     /** Ikkala qadam bajarilganda - tabrik. */
     private void tabrikla() {
-        final TextView t = matn("🎉", 64, MATN, false);
+        final TextView t = matn("🎉", 72, MATN, false);
         t.setGravity(Gravity.CENTER);
-        final android.widget.FrameLayout yuza = (android.widget.FrameLayout) getWindow().getDecorView().findViewById(android.R.id.content);
+        final android.widget.FrameLayout yuza = (android.widget.FrameLayout) findViewById(android.R.id.content);
         yuza.addView(t, new android.widget.FrameLayout.LayoutParams(-1, -1));
-        t.setScaleX(0f);
-        t.setScaleY(0f);
-        t.animate().scaleX(1.4f).scaleY(1.4f).setDuration(450)
-                .setInterpolator(new android.view.animation.OvershootInterpolator(3f))
-                .withEndAction(new Runnable() {
-                    @Override public void run() {
-                        t.animate().alpha(0f).scaleX(2f).scaleY(2f).setStartDelay(500).setDuration(500)
-                                .withEndAction(new Runnable() { @Override public void run() { yuza.removeView(t); } }).start();
-                    }
-                }).start();
+        Harakat.boshla(600, 0, new android.view.animation.OvershootInterpolator(3f), new Harakat.Qadam() {
+            @Override public void qadam(float x) { t.setScaleX(1.5f * x); t.setScaleY(1.5f * x); t.setRotation(25f * (1 - x)); }
+        }, null);
+        Harakat.boshla(500, 1100, null, new Harakat.Qadam() {
+            @Override public void qadam(float x) { t.setAlpha(1 - x); t.setScaleX(1.5f + x); t.setScaleY(1.5f + x); }
+        }, new Runnable() { @Override public void run() { yuza.removeView(t); } });
         android.widget.Toast.makeText(this, "Tayyor! Endi istalgan joyda yangi alifboda yozing 🎉",
                 android.widget.Toast.LENGTH_LONG).show();
     }
@@ -345,6 +398,14 @@ public class Sozlash extends Activity {
         yangila();
         Yangilash.tekshir(this, true, new Yangilash.Natija() {
             @Override public void tayyor(boolean bor) {
+                if (bor && getIntent().getBooleanExtra("yangila", false)) {
+                    // klaviaturadagi yashil tugmadan kelindi - darhol yuklab o'rnatamiz
+                    getIntent().removeExtra("yangila");
+                    Yangilash.ornat(Sozlash.this);
+                } else if (getIntent().getBooleanExtra("yangila", false)) {
+                    getIntent().removeExtra("yangila");
+                    android.widget.Toast.makeText(Sozlash.this, "Sizda eng yangi versiya ōrnatilgan ✅", android.widget.Toast.LENGTH_LONG).show();
+                }
                 if (bor) {
                     yangiMatn.setText("🆕 Yangi versiya: " + Yangilash.yangiNom(Sozlash.this));
                     yangiKarta.setVisibility(View.VISIBLE);
@@ -353,6 +414,18 @@ public class Sozlash extends Activity {
                 }
             }
         });
+    }
+
+    @Override
+    protected void onNewIntent(Intent i) {
+        super.onNewIntent(i);
+        setIntent(i);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        pulsToxtat(); // fonda animatsiya batareyani sarflamasin
     }
 
     @Override

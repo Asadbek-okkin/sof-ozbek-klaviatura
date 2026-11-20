@@ -126,6 +126,7 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         sahifa = 0;
         kv.setSahifa(tillar.get(tilIndeks));
+        ab.yangiVersiya(Yangilash.yangiBor(this));
         return ildiz;
     }
 
@@ -177,12 +178,13 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
     private void yangiVersiyaniAyt() {
         Yangilash.tekshir(this, false, new Yangilash.Natija() {
             @Override public void tayyor(boolean bor) {
+                if (ab != null) ab.yangiVersiya(bor);   // klaviatura tepasida yashil "yangilash" tugmasi
                 if (!bor || ab == null) return;
                 long oxirgi = Yangilash.sp(Klaviatura.this).getLong("aytildi", 0);
                 if (System.currentTimeMillis() - oxirgi < 24 * 60 * 60 * 1000L) return;
                 Yangilash.sp(Klaviatura.this).edit().putLong("aytildi", System.currentTimeMillis()).apply();
                 xabar("🆕 Yangi versiya " + Yangilash.yangiNom(Klaviatura.this)
-                        + " — ⚙ ni bosib yangilang", 5000);
+                        + " — yaşil ⬇ tugmani bosing", 5000);
             }
         });
     }
@@ -630,6 +632,15 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
             case Asboblar.OVOZ:
                 ovozBoshla();
                 break;
+            case Asboblar.YANGI: {
+                // yangi versiyani yuklab o'rnatish (o'rnatish oynasini faqat ilova oynasi ocha oladi)
+                xabar("⬇ Yangi versiya yuklanmoqda...", 2500);
+                Intent i = new Intent(this, Sozlash.class);
+                i.putExtra("yangila", true);
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(i);
+                break;
+            }
             default:
                 break;
         }

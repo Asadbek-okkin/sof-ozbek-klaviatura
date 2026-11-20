@@ -27,8 +27,16 @@ final class Asboblar extends View {
         void ovozToxtat();
     }
 
-    static final int BUFER = 0, TAHRIR = 1, OGIR = 2, MAVZU = 3, SOZLAMA = 4, OVOZ = 5;
-    private static final int[] TARTIB = {BUFER, OGIR, MAVZU, SOZLAMA}; // tahrir paneli olib tashlandi (foydalanuvchi talabi)
+    static final int BUFER = 0, TAHRIR = 1, OGIR = 2, MAVZU = 3, SOZLAMA = 4, OVOZ = 5, YANGI = 6;
+    private static final int[] ODDIY = {BUFER, OGIR, MAVZU, SOZLAMA}; // tahrir paneli olib tashlandi (foydalanuvchi talabi)
+    private static final int[] YANGI_BILAN = {YANGI, BUFER, OGIR, MAVZU, SOZLAMA};
+    private int[] TARTIB = ODDIY;
+
+    /** Yangi versiya bo'lsa - chapda yashil "yangilash" tugmasi paydo bo'ladi. */
+    void yangiVersiya(boolean bor) {
+        int[] t = bor ? YANGI_BILAN : ODDIY;
+        if (t != TARTIB) { TARTIB = t; invalidate(); }
+    }
 
     private static final int R_ASBOB = 0, R_TAKLIF = 1, R_XABAR = 2;
 
@@ -215,6 +223,19 @@ final class Asboblar extends View {
                 c.drawCircle(cx + s * 0.05f, cy - s * 0.22f, s * 0.07f, p);
                 c.drawCircle(cx + s * 0.2f, cy - s * 0.02f, s * 0.07f, p);
                 c.drawCircle(cx - s * 0.08f, cy + s * 0.18f, s * 0.09f, p);
+                break;
+            }
+            case YANGI: { // yashil doira ichida pastga o'q - "yangi versiyani o'rnatish"
+                p.setStyle(Paint.Style.FILL);
+                p.setColor(0xFF34A853);
+                c.drawCircle(cx, cy, s * 0.62f, p);
+                stroke(0xFFFFFFFF);
+                p.setStrokeWidth(2.4f * d);
+                c.drawLine(cx, cy - s * 0.32f, cx, cy + s * 0.22f, p);
+                c.drawLine(cx, cy + s * 0.24f, cx - s * 0.2f, cy + s * 0.04f, p);
+                c.drawLine(cx, cy + s * 0.24f, cx + s * 0.2f, cy + s * 0.04f, p);
+                c.drawLine(cx - s * 0.26f, cy + s * 0.38f, cx + s * 0.26f, cy + s * 0.38f, p);
+                p.setStrokeWidth(1.8f * d);
                 break;
             }
             case SOZLAMA: { // tishli g'ildirak
