@@ -163,6 +163,7 @@ public class Asosiy extends Activity {
             kk.addView(chiziq(x.optString(0).substring(5), x.optInt(1), maks));
         }
 
+        royxat("📲 Platformalar", s.optJSONArray("platformalar"), 5);
         royxat("🌍 Davlatlar", s.optJSONArray("davlatlar"), 30);
         royxat("🏙 Viloyatlar", s.optJSONArray("viloyatlar"), 40);
         royxat("📍 Şaharlar", s.optJSONArray("shaharlar"), 30);
@@ -213,7 +214,43 @@ public class Asosiy extends Activity {
             t.setPadding(0, 0, 0, dp(8));
             xk.addView(t);
         }
-        ichki.addView(matn("Yangilangan: " + sana(s.optLong("vaqt")), 12, KULRANG, false));
+        ichki.addView(matn("Yangilangan: " + sana(s.optLong("vaqt")) + "  •  har 60 soniyada ō'zi yangilanadi  •  admin v" + versiya(), 12, KULRANG, false));
+    }
+
+    // ilova ochiq turganda statistika har daqiqada o'zi yangilanadi
+    private final Runnable avto = new Runnable() {
+        @Override public void run() {
+            if (ichki != null && !sp.getString("kalit", "").isEmpty()) yuklaJim();
+            h.postDelayed(this, 60000);
+        }
+    };
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        h.postDelayed(avto, 60000);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        h.removeCallbacks(avto);
+    }
+
+    /** Ekranni tozalamasdan yangilash (aylantirilgan joy saqlanadi). */
+    private void yuklaJim() {
+        new Thread(new Runnable() {
+            @Override public void run() {
+                try {
+                    final JSONObject s = new JSONObject(sorov("GET", "statistika", null));
+                    h.post(new Runnable() { @Override public void run() { chiz(s); } });
+                } catch (Exception ignored) { }
+            }
+        }).start();
+    }
+
+    private String versiya() {
+        try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return "?"; }
     }
 
     private void royxat(String nom, JSONArray a, int max) {
