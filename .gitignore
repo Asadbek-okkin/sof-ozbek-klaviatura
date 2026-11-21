@@ -2,3 +2,5 @@ out/
 *.apk
 *.jks
 *.idsig
+ios/build/
+ios/SofOzbek.xcodeproj/

@@ -1,0 +1,56 @@
+# iPhone versiyasi (XcodeGen): `xcodegen` -> SofOzbek.xcodeproj
+# Yig'ish GitHub Actions'ning Mac serverida (.github/workflows/ios.yml) - Windows kompyuter yetadi.
+name: SofOzbek
+options:
+  bundleIdPrefix: uz.okkin
+  deploymentTarget:
+    iOS: "15.0"
+  developmentLanguage: uz
+settings:
+  base:
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+targets:
+  SofOzbek:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+    dependencies:
+      - target: Klaviatura
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: "Sof Özbek"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        LSApplicationQueriesSchemes: [tg]
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: uz.okkin.sofozbek
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  Klaviatura:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Klaviatura
+      - path: ../assets/lugat.txt
+        buildPhase: resources
+    info:
+      path: Klaviatura/Info.plist
+      properties:
+        CFBundleDisplayName: "Sof Özbek"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).KeyboardViewController"
+          NSExtensionAttributes:
+            IsASCIICapable: false
+            PrefersRightToLeft: false
+            PrimaryLanguage: uz
+            RequestsOpenAccess: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: uz.okkin.sofozbek.klaviatura

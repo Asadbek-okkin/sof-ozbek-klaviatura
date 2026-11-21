@@ -1,0 +1,32 @@
+# iPhone versiyasini GitHub'ning Mac serverida yig'ib tekshirish (kompyuterga Mac kerak emas).
+# Imzosiz (simulyator uchun) yig'iladi. App Store / TestFlight'ga chiqarish uchun Apple Developer
+# akkaunti kerak - u bo'lganda shu faylga imzolash va yuklash qadamlari qo'shiladi.
+name: iPhone yig'ish
+
+on:
+  push:
+    paths: ["ios/**", ".github/workflows/ios.yml"]
+  workflow_dispatch:
+
+jobs:
+  yigish:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: XcodeGen
+        run: brew install xcodegen
+      - name: Loyiha yaratish
+        working-directory: ios
+        run: xcodegen generate
+      - name: Yig'ish (simulyator, imzosiz)
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild -project SofOzbek.xcodeproj -scheme SofOzbek -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO -derivedDataPath build build | tail -40
+      - name: Natija
+        uses: actions/upload-artifact@v4
+        with:
+          name: SofOzbek-simulyator
+          path: ios/build/Build/Products/Release-iphonesimulator/SofOzbek.app
