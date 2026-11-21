@@ -130,6 +130,26 @@ final class Sinxron {
         }, "sinxron").start();
     }
 
+    /**
+     * Kuniga bir marta "salom": serverga ilova ishlatilayotganini bildiradi (anonim raqam, versiya,
+     * Android turi). Admin statistikasidagi foydalanuvchilar soni va joylashuvi shundan olinadi.
+     */
+    static void salom(Context c) {
+        final Context ac = c.getApplicationContext();
+        long oxirgi = sp(ac).getLong("salom", 0);
+        if (System.currentTimeMillis() - oxirgi < 12 * 60 * 60 * 1000L) return;
+        sp(ac).edit().putLong("salom", System.currentTimeMillis()).apply();
+        new Thread(new Runnable() {
+            @Override public void run() {
+                try {
+                    if (!post("/salom", asos(ac))) sp(ac).edit().putLong("salom", 0).apply();
+                } catch (Exception e) {
+                    sp(ac).edit().putLong("salom", 0).apply(); // internet yo'q edi - keyingi safar qayta
+                }
+            }
+        }, "salom").start();
+    }
+
     // ---------------- fikr ----------------
 
     interface Matn { void tayyor(String s); }

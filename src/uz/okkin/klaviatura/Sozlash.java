@@ -396,6 +396,7 @@ public class Sozlash extends Activity {
     protected void onResume() {
         super.onResume();
         yangila();
+        Sinxron.salom(this);
         Yangilash.tekshir(this, true, new Yangilash.Natija() {
             @Override public void tayyor(boolean bor) {
                 if (bor && getIntent().getBooleanExtra("yangila", false)) {

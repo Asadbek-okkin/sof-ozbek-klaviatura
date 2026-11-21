@@ -172,6 +172,7 @@ public class Klaviatura extends InputMethodService implements KlaviaturaView.Tin
         takliflarniYangila();
         yangiVersiyaniAyt();
         if (lugat.tayyormi()) Sinxron.kunlik(this);
+        Sinxron.salom(this);
     }
 
     /** Yangi versiya bo'lsa - kuniga bir marta tepada eslatadi. */
